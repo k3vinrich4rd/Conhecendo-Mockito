@@ -21,13 +21,15 @@ class FinalizarLeilaoServiceTest {
     @Mock //Outra forma de criar um mock
     //Porém, isso não é feito de uma forma automática
     private LeilaoDao leilaoDao;
+    @Mock
+    private EnviadorDeEmails enviadorDeEmails;
 
     @BeforeEach
     public void inicializarMocks() {
         //MockitoAnnotations — lê as anotações do mockito
         //This (este) — se refere a própria classe de teste
         MockitoAnnotations.initMocks(this); //initMocks inicializa os mocks
-        this.service = new FinalizarLeilaoService(leilaoDao);
+        this.service = new FinalizarLeilaoService(leilaoDao, enviadorDeEmails);
     }
 
     @Test
@@ -45,6 +47,45 @@ class FinalizarLeilaoServiceTest {
         //Verify verifica se o método foi chamado e internamente já faz um assert
         Mockito.verify(leilaoDao).salvar(leilao);
     }
+
+    @Test
+    void deveriaEnviarUmEmailParaOVencedor() {
+        List<Leilao> leilaos = leiloes();
+        //Mockito.when, maninupula o comportamento
+        //com base na condicação definida, e sim retorna algo (thenReturn)
+        Mockito.when(leilaoDao.buscarLeiloesExpirados())
+                .thenReturn(leilaos);
+        service.finalizarLeiloesExpirados();
+        Leilao leilao = leilaos.get(0);
+        Lance lanceVencedor = leilao.getLanceVencedor();
+        Mockito.verify(enviadorDeEmails).enviarEmailVencedorLeilao(lanceVencedor);
+    }
+
+
+    @Test
+    void naoDeveriaEnviarEmailParaVencedorDoLeilaoEmCasoDeException() {
+        List<Leilao> leilaos = leiloes();
+
+        //Mockito.when, maninupula o comportamento
+        //com base na condicação definida, e sim retorna algo (thenReturn)
+        Mockito.when(leilaoDao.buscarLeiloesExpirados())
+                .thenReturn(leilaos);
+
+        //thenThow — Garante que o mockito vai lançar uma exception no seu comportamento.
+        //Mockito.any — Quando método salvar for chamado, independente do parâmetro
+        // a exception vai ser lançada
+        Mockito.when(leilaoDao.salvar(Mockito.any())).thenThrow(RuntimeException.class);
+
+        try { //Para caputurar a exception que esta sendo testada
+            service.finalizarLeiloesExpirados();
+            Mockito.verifyNoInteractions(enviadorDeEmails);
+        } catch (Exception ignored) {
+        }
+
+        //Verifica se o método não teve interações
+        Mockito.verifyNoInteractions(enviadorDeEmails);
+    }
+
 
     private List<Leilao> leiloes() {
         List<Leilao> lista = new ArrayList<>();

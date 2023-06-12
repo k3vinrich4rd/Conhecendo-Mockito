@@ -1,0 +1,38 @@
+@RunWith(MockitoJUnitRunner.class) //substitui o MockitoAnnotations.initMocks(this)
+public class PessoaServiceTest {
+
+    @Mock
+    private PessoaRepository repository;
+
+    @InjectMocks //instancia a classe e injeta nela os mocks que foram declarados aqui no teste
+    private PessoaService service;
+
+    @Test(expected = Exception.class)
+    public void naoDeveriaSalvarPessoaComMaisDe30Anos() throws Exception {
+        Pessoa p = new Pessoa();
+        p.setIdade(35);
+
+        service.save(p);
+    }
+
+    @Test
+    public void deveriaSalvarPessoaComMenosDe30Anos()  throws Exception {
+        Pessoa p = new Pessoa();
+        p.setIdade(22);
+
+        service.save(p);
+
+        Mockito.verify(repository.save(p));
+    }
+
+    @Test
+    public void deveriaSalvarPessoaComExatos30Anos()  throws Exception {
+        Pessoa p = new Pessoa();
+        p.setIdade(30);
+
+        service.save(p);
+
+        Mockito.verify(repository.save(p));
+    }
+
+}
