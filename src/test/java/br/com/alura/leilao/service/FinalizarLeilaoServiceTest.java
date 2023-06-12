@@ -4,9 +4,11 @@ import br.com.alura.leilao.dao.LeilaoDao;
 import br.com.alura.leilao.model.Lance;
 import br.com.alura.leilao.model.Leilao;
 import br.com.alura.leilao.model.Usuario;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
@@ -31,7 +33,17 @@ class FinalizarLeilaoServiceTest {
     @Test
     void deveriaFinalizarUmLeilao() {
         List<Leilao> leilaos = leiloes();
-        service = new FinalizarLeilaoService(leilaoDao);
+        //Mockito.when, maninupula o comportamento
+        //com base na condicação definida, e sim retorna algo (thenReturn)
+        Mockito.when(leilaoDao.buscarLeiloesExpirados())
+                .thenReturn(leilaos);
+        service.finalizarLeiloesExpirados();
+        Leilao leilao = leilaos.get(0);
+        Assertions.assertTrue(leilao.isFechado());
+        Assertions.assertEquals(new BigDecimal("900"),
+                leilao.getLanceVencedor().getValor());
+        //Verify verifica se o método foi chamado e internamente já faz um assert
+        Mockito.verify(leilaoDao).salvar(leilao);
     }
 
     private List<Leilao> leiloes() {

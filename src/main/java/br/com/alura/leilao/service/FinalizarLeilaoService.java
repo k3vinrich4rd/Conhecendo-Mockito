@@ -6,6 +6,7 @@ import br.com.alura.leilao.model.Leilao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,7 +39,8 @@ public class FinalizarLeilaoService {
     }
 
     private Lance maiorLanceDadoNoLeilao(Leilao leilao) {
-        List<Lance> lancesDoLeilao = leilao.getLances();
+
+        List<Lance> lancesDoLeilao = new ArrayList<>(leilao.getLances());
         lancesDoLeilao.sort((lance1, lance2) -> {
             return lance2.getValor().compareTo(lance1.getValor());
         });
